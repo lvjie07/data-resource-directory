@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruizhi.data.dal.mapper.RtlFlwDbTblMapper">
+    
+    <select id="getRtlFlwDbTblListRealFlwId" resultType="RtlFlwDbTbl">
+        SELECT tbl.* FROM rtl_flw_db_tbl tbl
+        INNER JOIN rtl_flw_db db ON tbl.src_id = db.src_id
+        <if test="ew.emptyOfWhere == false">
+            ${ew.customSqlSegment}
+        </if>
+    </select>
+
+</mapper>

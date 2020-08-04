@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruizhi.data.dal.mapper.FldTypInfoMapper">
+
+    <select id="queryPage" resultType="com.ruizhi.data.dto.fldTypInfo.FldTypInfoListDTO">
+        SELECT
+        <include refid="select_page_column"></include>
+        FROM
+        fld_typ_info typ
+        left join sen_lev_info lev
+        on typ.sen_id = lev.id
+        <if test="ew.emptyOfWhere == false">
+            ${ew.customSqlSegment}
+        </if>
+    </select>
+
+    <sql id="select_page_column">
+      typ.id,
+      typ.first_bns_type_id,
+      typ.first_bns_type_name,
+      typ.second_bns_type_id,
+      typ.second_bns_type_name,
+      typ.three_bns_type_id,
+      typ.three_bns_type_name,
+      typ.sen_id,
+      typ.prt,
+      typ.ist_nam,
+      lev.lev,
+      lev.sen_lev
+    </sql>
+
+    <select id="test" resultType="com.ruizhi.data.dal.entitys.FldTypInfo">
+        select * from fld_typ_info
+    </select>
+</mapper>
