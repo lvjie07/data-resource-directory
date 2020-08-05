@@ -3,6 +3,7 @@ package com.ruizhi.data.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.ruizhi.data.dal.entitys.RelResult;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.ruizhi.data.dto.relResultInfo.RelFieldDataResponse;
 import com.ruizhi.data.dto.relResultInfo.RelResultRequest;
 
 /**
@@ -35,4 +36,11 @@ public interface RelResultService extends IService<RelResult> {
      * @return
      */
     boolean cancel(Integer id);
+
+    /**
+     * 查询字段采集数据
+     * @param id
+     * @return
+     */
+    RelFieldDataResponse getFieldData(Integer id);
 }

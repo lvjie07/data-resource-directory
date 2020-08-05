@@ -6,6 +6,7 @@ import com.ruizhi.data.commons.exception.ExceptionProcessorUtils;
 import com.ruizhi.data.commons.result.CommonResponse;
 import com.ruizhi.data.commons.result.ResponseUtils;
 import com.ruizhi.data.dal.entitys.RelResult;
+import com.ruizhi.data.dto.relResultInfo.RelFieldDataResponse;
 import com.ruizhi.data.dto.relResultInfo.RelResultRequest;
 import com.ruizhi.data.dto.relResultInfo.RelResultResponse;
 import com.ruizhi.data.service.RelResultService;
@@ -84,6 +85,24 @@ public class RelResultController {
             relResultService.cancel(id);
         }catch (Exception e) {
             log.error("RelResultController.cancel Exception: {}", e);
+            ExceptionProcessorUtils.wrapperHandlerException(response, e);
+        }
+        return response;
+    }
+
+    /**
+     * 获取采样数据
+     * @param id
+     * @return
+     */
+    @PostMapping("/getFieldData/{id}")
+    public RelFieldDataResponse getFieldData(@PathVariable("id") Integer id) {
+        RelFieldDataResponse response = new RelFieldDataResponse();
+        try {
+            response = relResultService.getFieldData(id);
+            ResponseUtils.resultSuccessResponse(response);
+        } catch (Exception e) {
+            log.error("RelResultController.getFieldData Exception: {}", e);
             ExceptionProcessorUtils.wrapperHandlerException(response, e);
         }
         return response;

@@ -43,9 +43,24 @@ public class RtlTbl implements Serializable {
     private String rtlFldName;
 
     /**
+     * 字段ID
+     */
+    private Integer rtlFldId;
+
+    /**
+     * 被关联表名称
+     */
+    private String relTblName;
+
+    /**
      * 关联字段名称
      */
     private String rtlTblRtlName;
+
+    /**
+     * 关联字段ID
+     */
+    private Integer relFldId;
 
     /**
      * 表格类型

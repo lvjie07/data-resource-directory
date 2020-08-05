@@ -31,8 +31,9 @@ public class GeneratorServiceEntity {
 //                "rtl_flw_db",
 //                    "rtl_flw_db_tbl",
 //                "fld_clt_rst",
-                "rel_result",
-                "rtl_tbl");
+//                "rel_result",
+//                "rtl_tbl",
+                "sample_result_data");
     }
 
     private void generateByTables(boolean serviceNameStartWithI, String packageName, String... tableNames) {

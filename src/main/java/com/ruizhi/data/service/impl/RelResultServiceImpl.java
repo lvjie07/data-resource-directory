@@ -9,15 +9,21 @@ import com.ruizhi.data.constant.ResultCode;
 import com.ruizhi.data.dal.entitys.RelResult;
 import com.ruizhi.data.dal.entitys.RtlFlwDb;
 import com.ruizhi.data.dal.entitys.RtlTbl;
+import com.ruizhi.data.dal.entitys.SampleResultData;
 import com.ruizhi.data.dal.mapper.RelResultMapper;
+import com.ruizhi.data.dto.relResultInfo.RelFieldDataResponse;
 import com.ruizhi.data.dto.relResultInfo.RelResultRequest;
+import com.ruizhi.data.dto.relResultInfo.SampleResultDataDTO;
 import com.ruizhi.data.service.RelResultService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.ruizhi.data.service.RtlTblService;
+import com.ruizhi.data.service.SampleResultDataService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -34,6 +40,9 @@ public class RelResultServiceImpl extends ServiceImpl<RelResultMapper, RelResult
 
     @Autowired
     private RtlTblService rtlTblService;
+
+    @Autowired
+    private SampleResultDataService sampleResultDataService;
 
     @Override
     public IPage<RelResult> queryPage(RelResultRequest request) {
@@ -104,5 +113,48 @@ public class RelResultServiceImpl extends ServiceImpl<RelResultMapper, RelResult
             this.removeById(rtlTbl.getRelResultId());
         }
         return true;
+    }
+
+    @Override
+    public RelFieldDataResponse getFieldData(Integer id) {
+        // 1.校验数据是否存在
+        RtlTbl rtlTbl = rtlTblService.getById(id);
+        if (Objects.isNull(rtlTbl)) {
+            throw new BizException(ResultCode.DB_DATA_NOTEXIST.getCode(), ResultCode.DB_DATA_NOTEXIST.getMessage());
+        }
+        // 2.查询主键采样数据
+        SampleResultDataDTO masterSampleResultData = new SampleResultDataDTO();
+        masterSampleResultData.setTableName(rtlTbl.getTblName());
+        masterSampleResultData.setFieldName(rtlTbl.getRtlFldName());
+        List<String> resultDataList = new ArrayList<>();
+        QueryWrapper<SampleResultData> queryWrapper = new QueryWrapper<>();
+        Integer rtlFldId = rtlTbl.getRtlFldId();
+        if (Objects.nonNull(rtlFldId)) {
+            queryWrapper.lambda().eq(SampleResultData::getRstId,rtlFldId);
+            List<SampleResultData> sampleResultDataList = sampleResultDataService.list(queryWrapper);
+            sampleResultDataList.stream().forEach(sampleResultData -> {
+                resultDataList.add(sampleResultData.getResultData());
+            });
+        }
+        masterSampleResultData.setResultDataList(resultDataList);
+        // 3.查询关联表采样数据
+        SampleResultDataDTO relSampleResultData = new SampleResultDataDTO();
+        relSampleResultData.setTableName(rtlTbl.getRelTblName());
+        relSampleResultData.setFieldName(rtlTbl.getRtlTblRtlName());
+        List<String> relResultDataList = new ArrayList<>();
+        Integer relFldId = rtlTbl.getRelFldId();
+        if (Objects.nonNull(relFldId)) {
+            queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda().eq(SampleResultData::getRstId,relFldId);
+            List<SampleResultData> sampleResultDataList = sampleResultDataService.list(queryWrapper);
+            sampleResultDataList.stream().forEach(sampleResultData -> {
+                relResultDataList.add(sampleResultData.getResultData());
+            });
+        }
+        relSampleResultData.setResultDataList(relResultDataList);
+        RelFieldDataResponse response = new RelFieldDataResponse();
+        response.setMasterSampleResultData(masterSampleResultData);
+        response.setRelSampleResultData(relSampleResultData);
+        return response;
     }
 }

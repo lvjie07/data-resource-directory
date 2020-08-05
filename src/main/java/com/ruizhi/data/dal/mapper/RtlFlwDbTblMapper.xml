@@ -4,7 +4,7 @@
     
     <select id="getRtlFlwDbTblListRealFlwId" resultType="RtlFlwDbTbl">
         SELECT tbl.* FROM rtl_flw_db_tbl tbl
-        INNER JOIN rtl_flw_db db ON tbl.src_id = db.src_id
+        INNER JOIN rtl_flw_db db ON tbl.src_id = db.id
         <if test="ew.emptyOfWhere == false">
             ${ew.customSqlSegment}
         </if>
