@@ -1,6 +1,7 @@
 package com.ruizhi.data.dal.entitys;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -64,6 +65,7 @@ public class RelResult implements Serializable {
     /**
      * 被关联结果集
      */
+    @TableField(exist = false)
     private List<RtlTbl> rtlTblList;
 
 

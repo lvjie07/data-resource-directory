@@ -39,6 +39,7 @@ public class RelResultServiceImpl extends ServiceImpl<RelResultMapper, RelResult
     public IPage<RelResult> queryPage(RelResultRequest request) {
         Page<RelResult> page = new Page<>(request.getPageNum(), request.getPageCount());
         QueryWrapper<RelResult> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(RelResult::getFlwId,request.getId());
         if (StringUtils.isNotEmpty(request.getTableName())) {
             queryWrapper.lambda().eq(RelResult::getTblName,request.getTableName());
         }
@@ -47,10 +48,15 @@ public class RelResultServiceImpl extends ServiceImpl<RelResultMapper, RelResult
         }
         IPage<RelResult> resultPage = this.page(page,queryWrapper);
         resultPage.getRecords().stream().forEach(relResult -> {
+            // 处理确认字段
+            relResult.setCfmTyp(ConfirmStatusCode.getMessage(relResult.getCfmTyp()));
             // 查询所有被关联结果表数据
             QueryWrapper<RtlTbl> rtlTblQueryWrapper = new QueryWrapper<RtlTbl>();
             rtlTblQueryWrapper.lambda().eq(RtlTbl::getRelResultId,relResult.getId());
             List<RtlTbl> rtlTblList = rtlTblService.list(rtlTblQueryWrapper);
+            rtlTblList.stream().forEach(rtlTbl -> {
+                rtlTbl.setCfmTyp(ConfirmStatusCode.getMessage(rtlTbl.getCfmTyp()));
+            });
             relResult.setRtlTblList(rtlTblList);
         });
         return resultPage;
@@ -74,7 +80,7 @@ public class RelResultServiceImpl extends ServiceImpl<RelResultMapper, RelResult
         int count = rtlTblService.count(queryWrapper);
         if (count == 0) {
             RelResult relResult = this.getById(rtlTbl.getRelResultId());
-            relResult.setTblTyp(ConfirmStatusCode.CONFIRM.getCode());
+            relResult.setCfmTyp(ConfirmStatusCode.CONFIRM.getCode());
             this.updateById(relResult);
         }
         return true;
