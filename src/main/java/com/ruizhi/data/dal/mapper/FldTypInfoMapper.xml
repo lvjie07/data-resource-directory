@@ -29,7 +29,4 @@
       lev.sen_lev
     </sql>
 
-    <select id="test" resultType="com.ruizhi.data.dal.entitys.FldTypInfo">
-        select * from fld_typ_info
-    </select>
 </mapper>

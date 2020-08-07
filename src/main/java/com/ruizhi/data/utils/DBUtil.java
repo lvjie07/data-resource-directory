@@ -41,10 +41,10 @@ public class DBUtil {
     private Connection con;
 
     public DBUtil() {
-        driver = "com.mysql.jdbc.Driver";
-        url = "jdbc:mysql://127.0.0.1:3306/data_resource?serverTimezone=Asia/Shanghai";
-        username = "root";
-        password = "root";
+        this.driver = "com.mysql.jdbc.Driver";
+        this.url = "jdbc:mysql://127.0.0.1:3306/data_resource?serverTimezone=Asia/Shanghai";
+        this.username = "root";
+        this.password = "root";
     }
 
     public DBUtil(String srcTyp,String ipAdr,String prt,String usr,String pwd,String istNam) {
@@ -55,7 +55,7 @@ public class DBUtil {
             this.driver = "com.mysql.jdbc.Driver";
         }
         this.username = usr;
-        password = pwd;
+        this.password = pwd;
     }
 
     public Connection getConnection() throws Exception {

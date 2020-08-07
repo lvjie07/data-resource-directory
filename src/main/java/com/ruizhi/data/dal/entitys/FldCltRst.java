@@ -76,6 +76,11 @@ public class FldCltRst implements Serializable {
     private String isPky;
 
     /**
+     * 是否唯一列
+     */
+    private String isUnique;
+
+    /**
      * 是否索引列
      */
     private String isInd;

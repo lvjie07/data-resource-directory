@@ -28,5 +28,4 @@ public interface FldTypInfoMapper extends BaseMapper<FldTypInfo> {
      */
     IPage<FldTypInfoListDTO> queryPage(IPage<FldTypInfoListDTO> page,@Param(Constants.WRAPPER) Wrapper query);
 
-    List<FldTypInfo> test();
 }

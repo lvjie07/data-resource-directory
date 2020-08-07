@@ -113,6 +113,8 @@ public class FlwInfoServiceImpl extends ServiceImpl<FlwInfoMapper, FlwInfo> impl
             rtlFlwDbList.add(rtlFlwDb);
         });
         rtlFlwDbService.saveBatch(rtlFlwDbList);
+        // TODO 后台异步执行采集数据库表信息任务
+
         return true;
     }
 
