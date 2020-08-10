@@ -22,6 +22,7 @@ import com.ruizhi.data.dto.flwInfo.SaveFlwInfoRequest;
 import com.ruizhi.data.dto.flwInfo.TableAndFieldResponse;
 import com.ruizhi.data.dto.flwInfo.TableInfoDTO;
 import com.ruizhi.data.dto.flwInfo.TreeDataBaseInfoDTO;
+import com.ruizhi.data.event.DataCollectionEvent;
 import com.ruizhi.data.service.FldCltRstService;
 import com.ruizhi.data.service.FlwInfoService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -30,6 +31,7 @@ import com.ruizhi.data.service.RtlFlwDbTblService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -62,6 +64,9 @@ public class FlwInfoServiceImpl extends ServiceImpl<FlwInfoMapper, FlwInfo> impl
 
     @Autowired
     private FldCltRstService fldCltRstService;
+
+    @Autowired
+    private ApplicationEventPublisher applicationEventPublisher;
 
     @Override
     public IPage<FlwInfo> queryPage(FlwInfoRequest request) {
@@ -114,7 +119,7 @@ public class FlwInfoServiceImpl extends ServiceImpl<FlwInfoMapper, FlwInfo> impl
         });
         rtlFlwDbService.saveBatch(rtlFlwDbList);
         // TODO 后台异步执行采集数据库表信息任务
-
+        applicationEventPublisher.publishEvent(new DataCollectionEvent(this,flwInfoId));
         return true;
     }
 

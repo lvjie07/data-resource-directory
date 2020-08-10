@@ -91,7 +91,7 @@ public class RtlFlwDbTbl implements Serializable {
     private String fldNmlNum;
 
     /**
-     * 主键数量
+     * 主键数量、唯一键数量
      */
     private String fldPkNum;
 

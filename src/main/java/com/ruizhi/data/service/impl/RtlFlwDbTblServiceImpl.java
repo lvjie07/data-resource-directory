@@ -3,17 +3,25 @@ package com.ruizhi.data.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.ruizhi.data.commons.exception.BizException;
 import com.ruizhi.data.constant.ResultCode;
+import com.ruizhi.data.dal.entitys.FldCltRst;
+import com.ruizhi.data.dal.entitys.FlwInfo;
 import com.ruizhi.data.dal.entitys.RtlFlwDbTbl;
+import com.ruizhi.data.dal.entitys.SampleResultData;
 import com.ruizhi.data.dal.mapper.RtlFlwDbTblMapper;
 import com.ruizhi.data.dto.flwInfo.DataBaseTablesInfoRequest;
+import com.ruizhi.data.dto.rtlFlwDBTblInfo.TableAndFieldDTO;
 import com.ruizhi.data.dto.rtlFlwDBTblInfo.UpdataBusinessTypeRequest;
 import com.ruizhi.data.dto.rtlFlwDBTblInfo.UpdataTableInfoRequest;
+import com.ruizhi.data.service.FldCltRstService;
 import com.ruizhi.data.service.RtlFlwDbTblService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.ruizhi.data.service.SampleResultDataService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -31,6 +39,12 @@ public class RtlFlwDbTblServiceImpl extends ServiceImpl<RtlFlwDbTblMapper, RtlFl
 
     @Autowired
     private RtlFlwDbTblMapper rtlFlwDbTblMapper;
+
+    @Autowired
+    private FldCltRstService fldCltRstService;
+
+    @Autowired
+    private SampleResultDataService sampleResultDataService;
 
     @Override
     public List<RtlFlwDbTbl> getRtlFlwDbTblListRealFlwId(DataBaseTablesInfoRequest request) {
@@ -75,5 +89,37 @@ public class RtlFlwDbTblServiceImpl extends ServiceImpl<RtlFlwDbTblMapper, RtlFl
         }
         rtlFlwDbTbl.setUpdTime(new Date());
         return this.updateById(rtlFlwDbTbl);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public boolean insertDataConnection(List<TableAndFieldDTO> tableAndFieldDTOList, FlwInfo flwInfo) {
+        for (TableAndFieldDTO tableAndFieldDTO : tableAndFieldDTOList) {
+            // 1.插入表数据
+            RtlFlwDbTbl rtlFlwDbTbl = tableAndFieldDTO.getRtlFlwDbTbl();
+            rtlFlwDbTbl.setUpdTime(new Date());
+            this.save(rtlFlwDbTbl);
+            Integer saveId = rtlFlwDbTbl.getId();
+            // 2.插入字段数据
+            List<FldCltRst> fldCltRstList = tableAndFieldDTO.getFldCltRstList();
+            fldCltRstList.stream().forEach(fldCltRst -> {
+                fldCltRst.setTblId(saveId);
+            });
+            fldCltRstService.saveBatch(fldCltRstList);
+            // 3.插入采集数据
+            for(FldCltRst fldCltRst : fldCltRstList) {
+                Integer fldCltRstId =  fldCltRst.getId();
+                List<String> resultData = fldCltRst.getResultData();
+                List<SampleResultData> sampleResultDataList = new ArrayList<>();
+                for (String s : resultData) {
+                    SampleResultData sampleResultData = new SampleResultData();
+                    sampleResultData.setResultData(s);
+                    sampleResultData.setRstId(fldCltRstId);
+                    sampleResultDataList.add(sampleResultData);
+                }
+                sampleResultDataService.saveBatch(sampleResultDataList);
+            }
+        }
+        return true;
     }
 }

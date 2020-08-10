@@ -28,4 +28,9 @@ public class ForeignKeyDTO {
      * 外键位置
      */
     private Integer index;
+
+    /**
+     * 外键关联表名注释
+     */
+    private String fkTableNameComment;
 }
