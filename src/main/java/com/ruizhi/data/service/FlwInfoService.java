@@ -61,4 +61,11 @@ public interface FlwInfoService extends IService<FlwInfo> {
      * @return
      */
     IPage<FlwInfo> queryCatalogTypePage(CatalogTypeRequest request);
+
+    /**
+     * 修改分级分类
+     * @param id
+     * @return
+     */
+    boolean updateCatalogType(Integer id);
 }

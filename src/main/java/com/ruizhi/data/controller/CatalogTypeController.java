@@ -2,6 +2,8 @@ package com.ruizhi.data.controller;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.ruizhi.data.commons.exception.ExceptionProcessorUtils;
+import com.ruizhi.data.commons.result.CommonResponse;
 import com.ruizhi.data.commons.result.ResponseUtils;
 import com.ruizhi.data.dal.entitys.FlwInfo;
 import com.ruizhi.data.dto.catalogTypeInfo.CatalogTypeRequest;
@@ -9,6 +11,7 @@ import com.ruizhi.data.dto.catalogTypeInfo.CatalogTypeResponse;
 import com.ruizhi.data.service.FlwInfoService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,6 +40,24 @@ public class CatalogTypeController {
         response.setTotal(resultPage.getTotal());
         response.setPageCount(resultPage.getSize());
         response.setList(resultPage.getRecords());
+        return response;
+    }
+
+    /**
+     * 修改分级分类
+     * @param id
+     * @return
+     */
+    @PostMapping("/updateCatalogType/{id}")
+    public CommonResponse updateCatalogType(@PathVariable("id") Integer id) {
+        CommonResponse response = new CommonResponse();
+        ResponseUtils.resultSuccessResponse(response);
+        try {
+            flwInfoService.updateCatalogType(id);
+        } catch (Exception e) {
+            log.error("CatalogTypeController.updateCatalogType Exception: {}", e);
+            ExceptionProcessorUtils.wrapperHandlerException(response, e);
+        }
         return response;
     }
 }

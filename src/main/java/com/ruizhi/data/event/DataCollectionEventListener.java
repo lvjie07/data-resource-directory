@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 @EnableAsync
 public class DataCollectionEventListener {
 
-    //@Async
+    @Async
     @EventListener
     public void DataCollectionEventListener(DataCollectionEvent event) {
         log.info("DataCollectionEvent flwInfoId:{}",event.getFlwInfoId());

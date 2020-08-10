@@ -9,9 +9,13 @@ import com.ruizhi.data.constant.DataBaseTypeCode;
 import com.ruizhi.data.constant.ResultCode;
 import com.ruizhi.data.constant.TaskStatusCode;
 import com.ruizhi.data.dal.entitys.FldCltRst;
+import com.ruizhi.data.dal.entitys.FldTblPnd;
+import com.ruizhi.data.dal.entitys.FldTypInfo;
 import com.ruizhi.data.dal.entitys.FlwInfo;
 import com.ruizhi.data.dal.entitys.RtlFlwDb;
 import com.ruizhi.data.dal.entitys.RtlFlwDbTbl;
+import com.ruizhi.data.dal.entitys.SenLevInfo;
+import com.ruizhi.data.dal.entitys.TblTypInfo;
 import com.ruizhi.data.dal.mapper.FlwInfoMapper;
 import com.ruizhi.data.dto.catalogTypeInfo.CatalogTypeRequest;
 import com.ruizhi.data.dto.flwInfo.DataBaseInfoDTO;
@@ -22,12 +26,18 @@ import com.ruizhi.data.dto.flwInfo.SaveFlwInfoRequest;
 import com.ruizhi.data.dto.flwInfo.TableAndFieldResponse;
 import com.ruizhi.data.dto.flwInfo.TableInfoDTO;
 import com.ruizhi.data.dto.flwInfo.TreeDataBaseInfoDTO;
+import com.ruizhi.data.dto.tblTypInfo.RuleFieldDTO;
 import com.ruizhi.data.event.DataCollectionEvent;
 import com.ruizhi.data.service.FldCltRstService;
+import com.ruizhi.data.service.FldTblPndService;
+import com.ruizhi.data.service.FldTypInfoService;
 import com.ruizhi.data.service.FlwInfoService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.ruizhi.data.service.RtlFlwDbService;
 import com.ruizhi.data.service.RtlFlwDbTblService;
+import com.ruizhi.data.service.SenLevInfoService;
+import com.ruizhi.data.service.TblTypInfoService;
+import com.ruizhi.data.utils.ColaBeanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,9 +47,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -67,6 +79,18 @@ public class FlwInfoServiceImpl extends ServiceImpl<FlwInfoMapper, FlwInfo> impl
 
     @Autowired
     private ApplicationEventPublisher applicationEventPublisher;
+
+    @Autowired
+    private TblTypInfoService tblTypInfoService;
+
+    @Autowired
+    private FldTblPndService fldTblPndService;
+
+    @Autowired
+    private FldTypInfoService fldTypInfoService;
+
+    @Autowired
+    private SenLevInfoService senLevInfoService;
 
     @Override
     public IPage<FlwInfo> queryPage(FlwInfoRequest request) {
@@ -105,7 +129,7 @@ public class FlwInfoServiceImpl extends ServiceImpl<FlwInfoMapper, FlwInfo> impl
         });
         // 数据源名称拼接
         if (sb.length() > 0) {
-            flwInfo.setSrcNam(sb.substring(0,sb.length()-1));
+            flwInfo.setSrcNam(sb.substring(0, sb.length() - 1));
         }
         flwInfoMapper.insert(flwInfo);
         Integer flwInfoId = flwInfo.getId();
@@ -119,7 +143,7 @@ public class FlwInfoServiceImpl extends ServiceImpl<FlwInfoMapper, FlwInfo> impl
         });
         rtlFlwDbService.saveBatch(rtlFlwDbList);
         // TODO 后台异步执行采集数据库表信息任务
-        applicationEventPublisher.publishEvent(new DataCollectionEvent(this,flwInfoId));
+        applicationEventPublisher.publishEvent(new DataCollectionEvent(this, flwInfoId));
         return true;
     }
 
@@ -134,7 +158,7 @@ public class FlwInfoServiceImpl extends ServiceImpl<FlwInfoMapper, FlwInfo> impl
         // 2.删除数据
         this.removeById(id);
         QueryWrapper<RtlFlwDb> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(RtlFlwDb::getFlwId,id);
+        queryWrapper.lambda().eq(RtlFlwDb::getFlwId, id);
         rtlFlwDbService.remove(queryWrapper);
         return true;
     }
@@ -147,7 +171,7 @@ public class FlwInfoServiceImpl extends ServiceImpl<FlwInfoMapper, FlwInfo> impl
         }
         // 查询采集表数据
         List<RtlFlwDbTbl> rtlFlwDbTblList = rtlFlwDbTblService.getRtlFlwDbTblListRealFlwId(request);
-        Map<Integer,List<RtlFlwDbTbl>> resultMap =  rtlFlwDbTblList.stream().collect(
+        Map<Integer, List<RtlFlwDbTbl>> resultMap = rtlFlwDbTblList.stream().collect(
                 Collectors.groupingBy(RtlFlwDbTbl::getSrcId));
         DataBaseTablesInfoResponse response = new DataBaseTablesInfoResponse();
         response.setDataBaseSchem(DataBaseTypeCode.getMessage(flwInfo.getSrcTyp()));
@@ -158,7 +182,7 @@ public class FlwInfoServiceImpl extends ServiceImpl<FlwInfoMapper, FlwInfo> impl
             TreeDataBaseInfoDTO treeDataBaseInfoDTO = new TreeDataBaseInfoDTO();
             TableInfoDTO tableInfoDTO = new TableInfoDTO();
             List<TableInfoDTO> tableInfoDTOList = new ArrayList<>();
-            value.stream().forEach(r->{
+            value.stream().forEach(r -> {
                 tableInfoDTO.setTableId(r.getId());
                 tableInfoDTO.setTableName(r.getTblName());
                 tableInfoDTOList.add(tableInfoDTO);
@@ -182,7 +206,7 @@ public class FlwInfoServiceImpl extends ServiceImpl<FlwInfoMapper, FlwInfo> impl
         response.setRtlFlwDbTbl(rtlFlwDbTbl);
         // 2.查询字段信息
         QueryWrapper<FldCltRst> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(FldCltRst::getTblId,id);
+        queryWrapper.lambda().eq(FldCltRst::getTblId, id);
         List<FldCltRst> fldCltRstList = fldCltRstService.list(queryWrapper);
         response.setFldCltRstList(fldCltRstList);
         return response;
@@ -204,5 +228,111 @@ public class FlwInfoServiceImpl extends ServiceImpl<FlwInfoMapper, FlwInfo> impl
             f.setSrcTyp(DataBaseTypeCode.getMessage(f.getSrcTyp()));
         });
         return resultPage;
+    }
+
+    @Override
+    public boolean updateCatalogType(Integer id) {
+        FlwInfo flwInfo = this.getById(id);
+        if (Objects.isNull(flwInfo)) {
+            throw new BizException(ResultCode.DB_DATA_NOTEXIST.getCode(), ResultCode.DB_DATA_NOTEXIST.getMessage());
+        }
+        // 查询所有分级分类数据
+        List<TblTypInfo> tblTypInfoList = tblTypInfoService.list();
+        tblTypInfoList.stream().forEach(tblTypInfo -> {
+            QueryWrapper<FldTblPnd> queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda().eq(FldTblPnd::getTblId, tblTypInfo.getId());
+            List<FldTblPnd> fldTblPndList = fldTblPndService.list(queryWrapper);
+            List<RuleFieldDTO> ruleFieldDTOList = ColaBeanUtils.copyListProperties(fldTblPndList, RuleFieldDTO::new);
+            ruleFieldDTOList.stream().forEach(ruleFieldDTO -> {
+                // 查询规则表数据
+                FldTypInfo fldTypInfo = fldTypInfoService.getById(ruleFieldDTO.getFldId());
+                if (Objects.nonNull(fldTypInfo)) {
+                    ruleFieldDTO.setPrt(fldTypInfo.getPrt());
+                    Integer sendId = fldTypInfo.getSenId();
+                    if (Objects.nonNull(sendId)) {
+                        SenLevInfo senLevInfo = senLevInfoService.getById(sendId);
+                        if (Objects.nonNull(senLevInfo)) {
+                            ruleFieldDTO.setLev(senLevInfo.getLev());
+                            ruleFieldDTO.setSenLev(senLevInfo.getSenLev());
+                        }
+                    }
+                }
+            });
+            tblTypInfo.setRuleFieldDTOList(ruleFieldDTOList);
+        });
+        // 查询采集表对应的字段
+        DataBaseTablesInfoRequest request = new DataBaseTablesInfoRequest();
+        request.setId(id);
+        List<RtlFlwDbTbl> rtlFlwDbTblList = rtlFlwDbTblService.getRtlFlwDbTblListRealFlwId(request);
+        rtlFlwDbTblList.stream().forEach(rtlFlwDbTbl -> {
+            QueryWrapper<FldCltRst> queryWrapper1 = new QueryWrapper<>();
+            queryWrapper1.lambda().eq(FldCltRst::getTblId, rtlFlwDbTbl.getId());
+            List<FldCltRst> fldCltRstList = fldCltRstService.list(queryWrapper1);
+            rtlFlwDbTbl.setFldCltRstList(fldCltRstList);
+        });
+        // 匹配所有的采集表对应的字段
+        for (TblTypInfo tblTypInfo : tblTypInfoList) {
+            List<RuleFieldDTO> ruleFieldDTOList = tblTypInfo.getRuleFieldDTOList();
+            for (int i = 0; i < rtlFlwDbTblList.size(); i++) {
+                RtlFlwDbTbl rtlFlwDbTbl = rtlFlwDbTblList.get(i);
+                Map<String,Object> resultMap = this.isLike(ruleFieldDTOList, rtlFlwDbTbl);
+                boolean isLike = (Boolean) resultMap.get("isLike");
+                List<FldCltRst> updateData = (List<FldCltRst>) resultMap.get("updateData");
+                if (isLike) {
+                    // 更新一级、二级、三级、四级类型
+                    rtlFlwDbTbl.setWrkFstType(tblTypInfo.getTblBnsTypOne());
+                    rtlFlwDbTbl.setWrkSedType(tblTypInfo.getTblBnsTypTwo());
+                    rtlFlwDbTbl.setWrkThdType(tblTypInfo.getTblBnsTypThree());
+                    rtlFlwDbTbl.setWrkForType(tblTypInfo.getTblBnsTypFour());
+                    rtlFlwDbTbl.setUpdTime(new Date());
+                    rtlFlwDbTblService.updateById(rtlFlwDbTbl);
+                    // 更新字段的敏感分级和分级名称
+                    if (updateData.size() > 0) {
+                        fldCltRstService.updateBatchById(updateData);
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 校验正则表达式是否匹配
+     *
+     * @param ruleFieldDTOList
+     * @param rtlFlwDbTbl
+     * @return
+     */
+    private Map<String,Object> isLike(List<RuleFieldDTO> ruleFieldDTOList, RtlFlwDbTbl rtlFlwDbTbl) {
+        Map<String,Object> resultMap = new HashMap<>();
+        List<FldCltRst> resultFldCltRstList = new ArrayList<>();
+        // 每个规则是否匹配上字段的个数，如果每个规则都有字段匹配上才更新数据
+        int likeNum = 0;
+        for (RuleFieldDTO ruleFieldDTO : ruleFieldDTOList) {
+            boolean isLike = false;
+            // 正则表达式
+            String prt = ruleFieldDTO.getPrt();
+            if (StringUtils.isNotEmpty(prt)) {
+                // 业务表中配置的所有字段都和表中字段匹配上才修改业务类型
+                List<FldCltRst> fldCltRstList = rtlFlwDbTbl.getFldCltRstList();
+                for (FldCltRst fldCltRst : fldCltRstList) {
+                    String fldCmt = fldCltRst.getFldCmt();
+                    boolean isMatch = Pattern.matches(prt, fldCmt);
+                    if (isMatch) {
+                        isLike = true;
+                        fldCltRst.setWrkLvl(ruleFieldDTO.getLev());
+                        fldCltRst.setSenName(ruleFieldDTO.getSenLev());
+                        resultFldCltRstList.add(fldCltRst);
+                    }
+                }
+            }
+            // 匹配上数量加1
+            if (isLike) {
+                likeNum++;
+            }
+        }
+        resultMap.put("isLike",likeNum == ruleFieldDTOList.size() ? true : false);
+        resultMap.put("updateData",resultFldCltRstList);
+        return resultMap;
     }
 }

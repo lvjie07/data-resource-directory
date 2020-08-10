@@ -1,8 +1,12 @@
 package com.ruizhi.data.dal.entitys;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import java.io.Serializable;
+import java.util.List;
+
+import com.ruizhi.data.dto.tblTypInfo.RuleFieldDTO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
@@ -46,6 +50,15 @@ public class TblTypInfo implements Serializable {
      * 四级业务类型
      */
     private String tblBnsTypFour;
+
+
+
+    /****************新加字段***********************/
+    /**
+     * 业务类型表关联的字段
+     */
+    @TableField(exist = false)
+    private List<RuleFieldDTO> ruleFieldDTOList;
 
 
 }

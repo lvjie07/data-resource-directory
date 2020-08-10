@@ -3,6 +3,7 @@ package com.ruizhi.data.event;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.ruizhi.data.commons.exception.BizException;
 import com.ruizhi.data.constant.ResultCode;
+import com.ruizhi.data.constant.TaskStatusCode;
 import com.ruizhi.data.dal.entitys.DataSourceInfo;
 import com.ruizhi.data.dal.entitys.FldCltRst;
 import com.ruizhi.data.dal.entitys.FlwInfo;
@@ -75,6 +76,9 @@ public class DataCollectionEvent extends ApplicationEvent {
             // 2.插入表数据、字段数据、采集数据
             RtlFlwDbTblService rtlFlwDbTblService = ApplicationContextProvider.getBean(RtlFlwDbTblService.class);
             rtlFlwDbTblService.insertDataConnection(tableAndFieldDTOList,flwInfo);
+            // 3.修改采集表数据为已完成
+            flwInfo.setFlwColTyp(TaskStatusCode.COMPLETE.getCode());
+            flwInfoService.updateById(flwInfo);
         }
 
     }
