@@ -19,7 +19,7 @@
 		<druid.version>1.1.19</druid.version>
 		<mybatis-plus-boot.varsion>3.2.0</mybatis-plus-boot.varsion>
 		<velocity-engine-core.version>2.1</velocity-engine-core.version>
-		<fastjson.version>1.2.56</fastjson.version>
+		<fastjson.version>1.2.83</fastjson.version>
 		<jsonwebtoken.version>0.9.1</jsonwebtoken.version>
 		<auth0.version>3.4.0</auth0.version>
 	</properties>
